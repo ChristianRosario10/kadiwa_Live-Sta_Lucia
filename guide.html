@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPISANAN LIVE - User Guide</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .guide-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: var(--spacing-lg);
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        .guide-container h1 {
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .guide-section {
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid #eee;
+        }
+
+        .guide-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .guide-section h2 {
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+        }
+
+        .guide-section h2 i {
+            color: var(--secondary-color);
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+        }
+
+        .guide-section p {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .feature-list li {
+            margin-bottom: var(--spacing-xs);
+            padding-left: var(--spacing-md);
+            position: relative;
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            line-height: 1.5;
+        }
+
+        .feature-list li:before {
+            content: "•";
+            color: var(--secondary-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .feature-list ol {
+            counter-reset: item;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list ol li {
+            counter-increment: item;
+            padding-left: var(--spacing-lg);
+        }
+
+        .feature-list ol li:before {
+            content: counter(item) ".";
+            color: var(--secondary-color);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .note-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--secondary-color);
+            padding: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .note-box h4 {
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-xs);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .note-box p {
+            margin-bottom: 0;
+            font-size: clamp(0.85rem, 2.5vw, 0.9rem);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .guide-container {
+                margin: 1rem auto;
+                padding: var(--spacing-md);
+                max-width: 95%;
+            }
+
+            .guide-section {
+                margin-bottom: var(--spacing-md);
+                padding-bottom: var(--spacing-md);
+            }
+
+            .guide-section h2 {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-xs);
+                text-align: left;
+            }
+
+            .feature-list {
+                padding-left: var(--spacing-sm);
+            }
+
+            .feature-list li {
+                padding-left: var(--spacing-md);
+            }
+
+            .note-box {
+                padding: var(--spacing-sm);
+                margin: var(--spacing-sm) 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .guide-container {
+                margin: 0.5rem auto;
+                padding: var(--spacing-sm);
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .guide-container h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .guide-section {
+                margin-bottom: var(--spacing-sm);
+                padding-bottom: var(--spacing-sm);
+            }
+
+            .guide-section h2 {
+                font-size: 1.1rem;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .guide-section p {
+                font-size: 0.9rem;
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .feature-list {
+                padding-left: var(--spacing-xs);
+            }
+
+            .feature-list li {
+                padding-left: var(--spacing-sm);
+                font-size: 0.85rem;
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .feature-list ol li {
+                padding-left: var(--spacing-md);
+            }
+
+            .note-box {
+                padding: var(--spacing-sm);
+                margin: var(--spacing-sm) 0;
+            }
+
+            .note-box h4 {
+                font-size: 0.9rem;
+            }
+
+            .note-box p {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1400px) {
+            .guide-container {
+                max-width: 1000px;
+                padding: var(--spacing-xl);
+            }
+
+            .guide-section h2 {
+                font-size: 1.4rem;
+            }
+
+            .guide-section p {
+                font-size: 1.1rem;
+            }
+
+            .feature-list li {
+                font-size: 1rem;
+            }
+        }
+
+        /* Enhanced styling */
+        .guide-section:hover {
+            background-color: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin: var(--spacing-sm) calc(-1 * var(--spacing-md));
+            transition: var(--transition);
+        }
+
+        .guide-section:hover h2 i {
+            transform: scale(1.1);
+            transition: var(--transition);
+        }
+
+        /* Accessibility improvements */
+        .guide-section:focus-within {
+            outline: 2px solid var(--secondary-color);
+            outline-offset: 2px;
+        }
+
+        /* Print styles */
+        @media print {
+            .guide-container {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .guide-section:hover {
+                background-color: transparent;
+                padding: 0;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">KAPISANAN LIVE</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="form.html">Register Member</a></li>
+            <li><a href="guide.html" class="active">User Guide</a></li>
+            <li><a href="admin.html">Admin Panel</a></li>
+        </ul>
+    </nav>
+
+    <main class="guide-container">
+        <h1>KAPISANAN LIVE System User Guide</h1>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-info-circle"></i> About KAPISANAN LIVE</h2>
+            <p>
+                KAPISANAN LIVE is a comprehensive member management system designed specifically for Kadiwa organizations.
+            </p>
+        </div>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-desktop"></i> Dashboard Overview</h2>
+            <p>The dashboard provides a quick overview of your organization's current status:</p>
+            <ul class="feature-list">
+                <li>Total number of registered Kadiwa members</li>
+                <li>Count of members with assigned tungkulin</li>
+                <li>Status-based member counts (Aktibo, Di Aktibo, UWP, MS, May Sakit)</li>
+                <li>Recent member registrations in List A</li>
+            </ul>
+        </div>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-user-plus"></i> Member Registration</h2>
+            <p>To register a new member:</p>
+            <ol class="feature-list">
+                <li>Navigate to the "Register Member" page</li>
+                <li>Fill in the required information:
+                    <ul class="feature-list">
+                        <li>Full Name</li>
+                        <li>Birthday</li>
+                        <li>Contact Number (11 digits)</li>
+                        <li>Number of Tungkulin (0-5)</li>
+                        <li>Member Status</li>
+                    </ul>
+                </li>
+                <li>If adding tungkulin, enter the titles in the dynamic fields</li>
+                <li>Click "Register Member" to submit</li>
+            </ol>
+            <div class="note-box">
+                <h4>Note:</h4>
+                <p>All fields marked with * are required. The system will automatically generate a unique Kadiwa Serial Number for each new member.</p>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+            <p>The Admin Panel provides advanced management capabilities:</p>
+            <ul class="feature-list">
+                <li>Edit member information</li>
+                <li>Update member status</li>
+                <li>Manage tungkulin assignments</li>
+                <li>Delete member records</li>
+                <li>View complete member history</li>
+            </ul>
+            <div class="note-box">
+                <h4>Security Note:</h4>
+                <p>Admin access is restricted to authorized personnel only. Please keep your login credentials secure.</p>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-exclamation-triangle"></i> System Limitations</h2>
+            <p>Please be aware of the following limitations:</p>
+            <ul class="feature-list">
+                <li>Maximum of 5 tungkulin per member</li>
+                <li>Contact numbers must be 11 digits</li>
+                <li>Data is stored locally in your browser</li>
+                <li>No automatic backup system (regular exports recommended)</li>
+            </ul>
+        </div>
+
+        <div class="guide-section">
+            <h2><i class="fas fa-question-circle"></i> Getting Help</h2>
+            <p>If you encounter any issues or have questions:</p>
+            <ul class="feature-list">
+                <li>Check this guide for relevant information</li>
+                <li>Contact your system administrator</li>
+                <li>Ensure you're using a modern web browser</li>
+                <li>Clear your browser cache if experiencing display issues</li>
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 KAPISANAN LIVE System. All rights reserved.</p>
+    </footer>
+    <script src="session-check.js"></script>
+</body>
+</html> 
