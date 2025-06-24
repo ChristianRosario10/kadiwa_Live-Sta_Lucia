@@ -549,7 +549,7 @@
 
             <div class="form-group tungkulin-count-input">
                 <label for="tungkulinCount">Number of Tungkulin</label> 
-                <input type="number" id="tungkulinCount" name="tungkulinCount" min="0" max="10" value="0" required style="width: 15%;">
+                <input type="number" id="tungkulinCount" name="tungkulinCount" min="0" max="10" value="0" required style="width: 100%;">
                 <div class="error-message" id="tungkulinCountError">Please enter a number between 0 and 10</div>
             </div>
 
@@ -843,18 +843,19 @@
 
         // Event Listeners
         if (tungkulinCountInput) {
-            tungkulinCountInput.addEventListener('change', function() {
-                const count = parseInt(this.value) || 0;
-                if (count < 0 || count > 5) {
+            tungkulinCountInput.addEventListener('input', function() {
+                let count = parseInt(this.value) || 0;
+                if (count < 0) count = 0;
+                if (count > 10) count = 10;
+                this.value = count;
+                if (count < 0 || count > 10) {
                     document.getElementById('tungkulinCountError').classList.add('show');
-                    this.value = 0;
                     updateTungkulinFields(0);
                 } else {
                     document.getElementById('tungkulinCountError').classList.remove('show');
                     updateTungkulinFields(count);
                 }
             });
-
             // Initial setup
             updateTungkulinFields(parseInt(tungkulinCountInput.value) || 0);
         }
