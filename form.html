@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPISANAN LIVE - Member Registration</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Add Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+        import { getDatabase, ref, push, set, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDh86gsO7fHI6XoFK9bwcp9AiWHGwy93sE",
+            authDomain: "cfo-db.firebaseapp.com",
+            databaseURL: "https://cfo-db-default-rtdb.firebaseio.com",
+            projectId: "cfo-db",
+            storageBucket: "cfo-db.firebasestorage.app",
+            messagingSenderId: "582935826111",
+            appId: "1:582935826111:web:0e45b59175b9fc9415c00a",
+            measurementId: "G-KJ7F8G1ZX1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // Function to generate a unique serial number
+        async function generateUniqueSerialNumber() {
+            try {
+                // Get the latest serial number from Firebase
+                const serialRef = ref(database, 'serialNumbers/latest');
+                const snapshot = await get(serialRef);
+                let currentSerial = 1;
+
+                if (snapshot.exists()) {
+                    currentSerial = snapshot.val() + 1;
+                }
+
+                // Update the latest serial number in Firebase
+                await set(serialRef, currentSerial);
+
+                // Format the serial number
+                return `KAD-${String(currentSerial).padStart(4, '0')}`;
+            } catch (error) {
+                console.error("Error generating serial number:", error);
+                // Fallback to local storage if Firebase fails
+                const counter = parseInt(localStorage.getItem('serialNumberCounter')) || 1;
+                localStorage.setItem('serialNumberCounter', counter + 1);
+                return `KAD-${String(counter).padStart(4, '0')}`;
+            }
+        }
+
+        // Function to save member data to Firebase
+        window.saveToFirebase = async function(memberData) {
+            try {
+                // Generate a unique serial number
+                const serialNumber = await generateUniqueSerialNumber();
+                memberData.serialNumber = serialNumber;
+
+                // Create a new member reference with the serial number as the key
+                const membersRef = ref(database, `members/${serialNumber}`);
+                
+                // Add timestamp for sorting
+                memberData.timestamp = Date.now();
+                
+                // Save the member data
+                await set(membersRef, memberData);
+                
+                // Also save to local storage for backward compatibility
+                const members = JSON.parse(localStorage.getItem('members')) || [];
+                members.push(memberData);
+                localStorage.setItem('members', JSON.stringify(members));
+                
+                return {
+                    success: true,
+                    serialNumber: serialNumber
+                };
+            } catch (error) {
+                console.error("Error saving to Firebase:", error);
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        };
+
+        // Function to check if a serial number already exists
+        window.checkSerialNumberExists = async function(serialNumber) {
+            try {
+                const memberRef = ref(database, `members/${serialNumber}`);
+                const snapshot = await get(memberRef);
+                return snapshot.exists();
+            } catch (error) {
+                console.error("Error checking serial number:", error);
+                return false;
+            }
+        };
+
+        // Tungkulin Options
+        const TUNGKULIN_OPTIONS = [
+            'PANGULONG KADIWA',
+            'II PANGULONG KADIWA',
+            'PANGULONG PNK',
+            'II PANGULONG PNK',
+            'PANGULONG KALIHIIM',
+            'II PANGULONG KALIHIM',
+            'PANGULONG SCAN',
+            'II PANGULONG SCAN',
+            'KALIHIM NG KAPISANANG KADIWA',
+            'II KALIHIM NG KAPISANANG KADIWA',
+            'TSV LEAD',
+            'II TSV LEAD',
+            'SCAN',
+            'KALIHIM',
+            'KALIHIM SA ILAW',
+            'KALIHIM SA GAWAIN',
+            'MANG-AAWIT',
+            'GURO',
+            'AUIDITOR',
+            'INGAT-YAMAN',
+            'KAGAWAD SA PNK',
+            'AUIDITOR SA PNK',
+            'INGAT-YAMAN SA PNK'
+        ];
+
+        // Make tungkulin options available globally
+        window.TUNGKULIN_OPTIONS = TUNGKULIN_OPTIONS;
+
+        // Function to calculate age accurately
+        window.calculateAge = function(birthday) {
+            if (!birthday) return null;
+            
+            const today = new Date();
+            const birthDate = new Date(birthday);
+            
+            // Check if birthday is valid
+            if (isNaN(birthDate.getTime())) {
+                return null;
+            }
+            
+            // Check if birthday is in the future
+            if (birthDate > today) {
+                return null;
+            }
+            
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            // Adjust age if birthday hasn't occurred this year
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            
+            return age;
+        };
+    </script>
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: var(--spacing-lg);
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-container h1 {
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        label {
+            display: block;
+            margin-bottom: var(--spacing-xs);
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        input, select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .submit-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-xs);
+        }
+
+        .submit-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: var(--accent-color);
+            font-size: 0.875rem;
+            margin-top: var(--spacing-xs);
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .age-display {
+            margin-top: var(--spacing-xs);
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .age-display.invalid {
+            color: var(--accent-color);
+        }
+
+        .status-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-xs);
+        }
+
+        .status-option {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-sm);
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .status-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-option input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .tungkulin-container {
+            margin-top: var(--spacing-md);
+            display: none;
+        }
+
+        .tungkulin-container.active {
+            display: block;
+        }
+
+        .tungkulin-field {
+            margin-bottom: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            border: 1px solid #eee;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+        }
+
+        .tungkulin-field label {
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .tungkulin-field select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .tungkulin-field select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .tungkulin-field select option:disabled {
+            color: #999;
+            font-style: italic;
+        }
+
+        .required {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .form-container {
+                margin: 1rem auto;
+                padding: var(--spacing-md);
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .form-container h1 {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .form-group {
+                margin-bottom: var(--spacing-sm);
+            }
+
+            input, select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: var(--spacing-sm);
+            }
+
+            .status-options {
+                grid-template-columns: 1fr;
+            }
+
+            .status-option {
+                padding: var(--spacing-sm);
+                font-size: 0.85rem;
+            }
+
+            .submit-btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 1rem;
+            }
+
+            .tungkulin-field select {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1400px) {
+            .form-container {
+                max-width: 1000px;
+                padding: var(--spacing-xl);
+            }
+
+            .status-options {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        /* Loading animation */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Form validation styles */
+        input:invalid, select:invalid {
+            border-color: var(--accent-color);
+        }
+
+        input:valid, select:valid {
+            border-color: #2ecc71;
+        }
+
+        /* Enhanced focus states */
+        .form-group:focus-within label {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        /* Success message styles */
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            border: 1px solid #c3e6cb;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">KAPISANAN LIVE</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="form.html" class="active">Register Member</a></li>
+            <li><a href="guide.html">User Guide</a></li>
+            <li><a href="admin.html">Admin Panel</a></li>
+        </ul>
+    </nav>
+
+    <main class="form-container">
+        <h1>Member Registration Form</h1>
+        
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message">
+            <i class="fas fa-check-circle"></i>
+            <span id="successText">Member registered successfully!</span>
+        </div>
+
+        <form id="memberForm" novalidate>
+            <div class="form-group">
+                <label for="name">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" required>
+                <div class="error-message" id="nameError">Please enter a valid name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="birthday">Birthday <span class="required">*</span></label>
+                <input type="date" id="birthday" name="birthday" required>
+                <div class="error-message" id="birthdayError">Please enter a valid birthday</div>
+                <div class="age-display" id="ageDisplay">
+                    Age: <span id="calculatedAge">-</span> years old
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="contact">Contact Number <span class="required">*</span></label>
+                <input type="tel" id="contact" name="contact" pattern="[0-9]{11}" required>
+                <div class="error-message" id="contactError">Please enter a valid 11-digit contact number</div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address <span class="required">*</span></label>
+                <input type="text" id="address" name="address" required>
+                <div class="error-message" id="addressError">Please enter a valid address</div>
+            </div>
+
+            <div class="form-group">
+                <label for="purokGrupo">Purok-Grupo <span class="required">*</span></label>
+                <select id="purokGrupo" name="purokGrupo" required>
+                    <option value="">Select Purok-Grupo</option>
+                    <option value="1-1">1-1</option>
+                    <option value="1-2">1-2</option>
+                    <option value="1-3">1-3</option>
+                    <option value="1-4">1-4</option>
+                    <option value="1-5">1-5</option>
+                    <option value="1-6">1-6</option>
+                    <option value="2-1">2-1</option>
+                    <option value="2-2">2-2</option>
+                    <option value="2-3">2-3</option>
+                    <option value="2-4">2-4</option>
+                    <option value="2-5">2-5</option>
+                    <option value="2-6">2-6</option>
+                    <option value="3-1">3-1</option>
+                    <option value="3-2">3-2</option>
+                    <option value="3-3">3-3</option>
+                    <option value="3-4">3-4</option>
+                    <option value="3-5">3-5</option>
+                    <option value="3-6">3-6</option>
+                </select>
+                <div id="purokGrupoError" class="error-message">Please select a purok-grupo</div>
+            </div>
+
+            <div class="form-group tungkulin-count-input">
+                <label for="tungkulinCount">Number of Tungkulin</label> 
+                <input type="number" id="tungkulinCount" name="tungkulinCount" min="0" max="10" value="0">
+                <div class="error-message" id="tungkulinCountError">Please enter a number between 0 and 10</div>
+            </div>
+
+            <div id="tungkulinContainer" class="tungkulin-container">
+                <!-- Dynamic tungkulin fields will be added here -->
+            </div>
+
+            <div class="form-group">
+                <label>Kalagayan (Status) <span class="required">*</span></label>
+                <div class="status-options">
+                    <label class="status-option">
+                        <input type="radio" name="status" value="Aktibo" required>
+                        Aktibo
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="status" value="Di Aktibo">
+                        Di Aktibo
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="status" value="UWP">
+                        UWP
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="status" value="MS">
+                        MS
+                    </label>
+                    <label class="status-option">
+                        <input type="radio" name="status" value="May Sakit">
+                        May Sakit
+                    </label>
+                </div>
+                <div class="error-message" id="statusError">Please select a status</div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-user-plus"></i>
+                Register Member
+            </button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 KAPISANAN LIVE System. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Override the form submission to use Firebase
+        document.getElementById('memberForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Reset error messages
+                document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
+                
+                // Validate form
+                let isValid = true;
+                const formData = new FormData(this);
+                
+                // Name validation
+                const name = formData.get('name').trim();
+                if (!name) {
+                    document.getElementById('nameError').classList.add('show');
+                    isValid = false;
+                }
+                
+                // Birthday validation
+                const birthday = formData.get('birthday');
+                if (!birthday) {
+                    document.getElementById('birthdayError').classList.add('show');
+                    isValid = false;
+                }
+                
+                // Calculate age
+                const age = window.calculateAge(birthday);
+                
+                // Contact validation
+                const contact = formData.get('contact');
+                if (!contact || !/^[0-9]{11}$/.test(contact)) {
+                    document.getElementById('contactError').classList.add('show');
+                    isValid = false;
+                }
+
+                // Address validation
+                const address = formData.get('address').trim();
+                if (!address) {
+                    document.getElementById('addressError').classList.add('show');
+                    isValid = false;
+                }
+                
+                // Status validation
+                const status = formData.get('status');
+                if (!status) {
+                    document.getElementById('statusError').classList.add('show');
+                    isValid = false;
+                }
+                
+                // Tungkulin validation
+                const tungkulinCount = parseInt(formData.get('tungkulinCount')) || 0;
+                const tungkulinInputs = document.querySelectorAll('select[name="tungkulin[]"]');
+                const selectedTungkulinCount = Array.from(tungkulinInputs).filter(input => input.value.trim()).length;
+                
+                if (tungkulinCount > 0 && selectedTungkulinCount !== tungkulinCount) {
+                    alert('Please select all required tungkulin roles');
+                    return;
+                }
+                
+                // Purok-Grupo validation
+                const purokGrupo = formData.get('purokGrupo');
+                if (!purokGrupo) {
+                    document.getElementById('purokGrupoError').classList.add('show');
+                    isValid = false;
+                }
+                
+                if (isValid) {
+                    // Collect tungkulin - ensure proper formatting
+                    const tungkulin = [];
+                    const tungkulinInputs = document.querySelectorAll('select[name="tungkulin[]"]');
+                    tungkulinInputs.forEach(input => {
+                        if (input.value.trim()) {
+                            tungkulin.push(input.value.trim());
+                        }
+                    });
+                    
+                    // Create new member object with proper data structure
+                    const newMember = {
+                        name: name,
+                        birthday: birthday,
+                        age: age,
+                        contact: contact,
+                        address: address,
+                        purokGrupo: purokGrupo,
+                        tungkulin: tungkulin, // Store as array of strings
+                        status: status,
+                        timestamp: Date.now()
+                    };
+                    
+                    // Save to Firebase
+                    const result = await window.saveToFirebase(newMember);
+                    
+                    if (result.success) {
+                        // Show success message
+                        const successMessage = document.getElementById('successMessage');
+                        const successText = document.getElementById('successText');
+                        successText.textContent = `Member registered successfully! Serial Number: ${result.serialNumber}`;
+                        successMessage.classList.add('show');
+                        
+                        // Reset form
+                        this.reset();
+                        document.getElementById('calculatedAge').textContent = '-';
+                        document.getElementById('tungkulinContainer').classList.remove('active');
+                        document.getElementById('tungkulinContainer').innerHTML = '';
+                        
+                        // Hide success message after 3 seconds and redirect
+                        setTimeout(() => {
+                            successMessage.classList.remove('show');
+                            window.location.href = 'index.html';
+                        }, 3000);
+                        
+                    } else {
+                        throw new Error(result.error || 'Failed to save member data');
+                    }
+                }
+            } catch (error) {
+                console.error("Registration error:", error);
+                alert('Error registering member: ' + error.message);
+            } finally {
+                // Reset button state
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Tungkulin handling with improved validation
+        const tungkulinCountInput = document.getElementById('tungkulinCount');
+        const tungkulinContainer = document.getElementById('tungkulinContainer');
+        const selectedTungkulin = new Set(); // Track selected tungkulin to prevent duplicates
+
+        function updateTungkulinFields(count) {
+            tungkulinContainer.innerHTML = '';
+            selectedTungkulin.clear();
+            
+            if (count > 0) {
+                tungkulinContainer.classList.add('active');
+                
+                for (let i = 0; i < count; i++) {
+                    const field = document.createElement('div');
+                    field.className = 'tungkulin-field';
+                    
+                    // Create label with required indicator
+                    const label = document.createElement('label');
+                    label.htmlFor = `tungkulin${i}`;
+                    label.textContent = `Tungkulin ${i + 1} *`;
+                    
+                    // Create select element
+                    const select = document.createElement('select');
+                    select.id = `tungkulin${i}`;
+                    select.name = 'tungkulin[]';
+                    select.required = true;
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = 'Select Tungkulin';
+                    select.appendChild(defaultOption);
+                    
+                    // Add tungkulin options
+                    window.TUNGKULIN_OPTIONS.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option;
+                        optionElement.textContent = option;
+                        optionElement.disabled = selectedTungkulin.has(option);
+                        select.appendChild(optionElement);
+                    });
+                    
+                    // Add change event listener
+                    select.addEventListener('change', function() {
+                        const previousValue = this.getAttribute('data-previous-value');
+                        if (previousValue) {
+                            selectedTungkulin.delete(previousValue);
+                        }
+                        if (this.value) {
+                            selectedTungkulin.add(this.value);
+                        }
+                        this.setAttribute('data-previous-value', this.value);
+                        
+                        // Update other select elements
+                        updateTungkulinOptions();
+                    });
+                    
+                    field.appendChild(label);
+                    field.appendChild(select);
+                    tungkulinContainer.appendChild(field);
+                }
+            } else {
+                tungkulinContainer.classList.remove('active');
+            }
+        }
+
+        function updateTungkulinOptions() {
+            const selects = tungkulinContainer.querySelectorAll('select');
+            selects.forEach(select => {
+                const currentValue = select.value;
+                Array.from(select.options).forEach(option => {
+                    if (option.value && option.value !== currentValue) {
+                        option.disabled = selectedTungkulin.has(option.value);
+                    }
+                });
+            });
+        }
+
+        // Birthday and age handling
+        const birthdayInput = document.getElementById('birthday');
+        const calculatedAgeSpan = document.getElementById('calculatedAge');
+        const ageDisplay = document.getElementById('ageDisplay');
+
+        function updateAgeDisplay(birthday) {
+            const age = window.calculateAge(birthday);
+            
+            if (age === null) {
+                calculatedAgeSpan.textContent = 'Invalid date';
+                ageDisplay.classList.add('invalid');
+                return false;
+            }
+            
+            calculatedAgeSpan.textContent = age;
+            ageDisplay.classList.remove('invalid');
+            return true;
+        }
+
+        // Event Listeners
+        if (tungkulinCountInput) {
+            tungkulinCountInput.addEventListener('input', function() {
+                let count = parseInt(this.value) || 0;
+                if (count < 0) count = 0;
+                if (count > 10) count = 10;
+                this.value = count;
+                
+                const errorElement = document.getElementById('tungkulinCountError');
+                if (count < 0 || count > 10) {
+                    errorElement.classList.add('show');
+                    updateTungkulinFields(0);
+                } else {
+                    errorElement.classList.remove('show');
+                    updateTungkulinFields(count);
+                }
+            });
+            
+            // Initial setup
+            updateTungkulinFields(parseInt(tungkulinCountInput.value) || 0);
+        }
+
+        if (birthdayInput) {
+            birthdayInput.addEventListener('change', function() {
+                const isValid = updateAgeDisplay(this.value);
+                const errorElement = document.getElementById('birthdayError');
+                if (!isValid) {
+                    errorElement.classList.add('show');
+                } else {
+                    errorElement.classList.remove('show');
+                }
+            });
+
+            // Set max date to today
+            const today = new Date().toISOString().split('T')[0];
+            birthdayInput.max = today;
+        }
+
+        // Update validation for purok-grupo
+        document.getElementById('purokGrupo').addEventListener('change', function() {
+            const errorElement = document.getElementById('purokGrupoError');
+            if (!this.value) {
+                errorElement.classList.add('show');
+            } else {
+                errorElement.classList.remove('show');
+            }
+        });
+
+        // Real-time validation for other fields
+        document.getElementById('name').addEventListener('input', function() {
+            const errorElement = document.getElementById('nameError');
+            if (!this.value.trim()) {
+                errorElement.classList.add('show');
+            } else {
+                errorElement.classList.remove('show');
+            }
+        });
+
+        document.getElementById('contact').addEventListener('input', function() {
+            const errorElement = document.getElementById('contactError');
+            if (!this.value || !/^[0-9]{11}$/.test(this.value)) {
+                errorElement.classList.add('show');
+            } else {
+                errorElement.classList.remove('show');
+            }
+        });
+
+        document.getElementById('address').addEventListener('input', function() {
+            const errorElement = document.getElementById('addressError');
+            if (!this.value.trim()) {
+                errorElement.classList.add('show');
+            } else {
+                errorElement.classList.remove('show');
+            }
+        });
+
+        // Status validation
+        document.querySelectorAll('input[name="status"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const errorElement = document.getElementById('statusError');
+                errorElement.classList.remove('show');
+            });
+        });
+    </script>
+    <script src="session-check.js"></script>
+</body>
+</html> 

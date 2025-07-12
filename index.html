@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPISANAN LIVE - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">KAPISANAN LIVE    </div>
+        <ul class="nav-links">
+            <li><a href="index.html" class="active">Dashboard</a></li>
+            <li><a href="form.html">Register Member</a></li>
+            <li><a href="guide.html">User Guide</a></li>
+            <li><a href="admin.html">Admin Panel</a></li>
+        </ul>
+    </nav>
+
+    <main class="dashboard">
+        <h1>Dashboard Overview</h1>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <i class="fas fa-hashtag"></i>
+                <h3>Total Kadiwa Serial Numbers</h3>
+                <p class="counter" id="totalSerialNumbers">0</p>
+            </div>
+            
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <h3>Members with Tungkulin</h3>
+                <p class="counter" id="totalTungkulin">0</p>
+            </div>
+        </div>
+
+        <div class="status-container">
+            <h2>Member Status Overview</h2>
+            <div class="status-grid">
+                <div class="status-card active">
+                    <h3>Aktibo</h3>
+                    <p class="counter" id="aktiboCount">0</p>
+                </div>
+                <div class="status-card inactive">
+                    <h3>Di Aktibo</h3>
+                    <p class="counter" id="diAktiboCount">0</p>
+                </div>
+                <div class="status-card uwp">
+                    <h3>UWP</h3>
+                    <p class="counter" id="uwpCount">0</p>
+                </div>
+                <div class="status-card ms">
+                    <h3>MS</h3>
+                    <p class="counter" id="msCount">0</p>
+                </div>
+                <div class="status-card sick">
+                    <h3>May Sakit</h3>
+                    <p class="counter" id="sickCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Purok-Grupo Stats -->
+        <div class="purok-grupo-stats">
+            <h2>Bilang ng Kaanib per Purok</h2>
+            <div class="purok-grupo-grid" id="purokGrupoStats">
+                    <!-- Purok-Grupo stats will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search by name, serial number, contact, or status...">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="filter-group">
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Aktibo">Aktibo</option>
+                    <option value="Di Aktibo">Di Aktibo</option>
+                    <option value="UWP">UWP</option>
+                    <option value="MS">MS</option>
+                    <option value="May Sakit">May Sakit</option>
+                </select>
+                <select id="tungkulinFilter">
+                    <option value="">All Tungkulin</option>
+                    <!-- Tungkulin options will be populated dynamically -->
+                </select>
+                <button type="button" id="clearFilters" class="clear-filters-btn">
+                    <i class="fas fa-times"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Verification Modal -->
+        <div id="verificationModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-shield-alt"></i> Security Verification</h3>
+                    <span class="close" id="closeVerificationModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>Enter verification code to view sensitive information:</p>
+                    <div class="verification-input">
+                        <input type="password" id="verificationCode" placeholder="Enter verification code" maxlength="5">
+                        <button type="button" id="verifyCode" class="verify-btn">
+                            <i class="fas fa-check"></i> Verify
+                        </button>
+                    </div>
+                    <div id="verificationError" class="error-message" style="display: none;">
+                        Incorrect code. Please try again.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members table with search results count -->
+        <div class="recent-members">
+            <div class="table-header">
+                <h2>Members List</h2>
+                <div class="search-results">
+                    Showing <span id="filteredCount">0</span> of <span id="totalCount">0</span> members
+                </div>
+            </div>
+            <div class="members-table-container">
+                <table id="membersTable">
+                    <thead>
+                        <tr>
+                            <th>Serial No.</th>
+                            <th>Name</th>
+                            <th class="sensitive-field">Birthday</th>
+                            <th class="sensitive-field">Age</th>
+                            <th class="sensitive-field">Contact</th>
+                            <th class="sensitive-field">Address</th>
+                            <th class="sensitive-field">Purok-Grupo</th>
+                            <th class="sensitive-field">Tungkulin</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersList">
+                        <!-- Members will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 KAPISANAN LIVE System. All rights reserved.</p>
+    </footer>
+
+    <script src="session-check.js"></script>
+    <script src="script.js" type="module"></script>
+
+    <style>
+        /* Dashboard styles */
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card h3 {
+            color: var(--primary-color);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .status-overview {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .status-overview h2 {
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-item {
+            padding: 1rem;
+            border-radius: 6px;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .status-item .label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-item .count {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .status-item.aktibo { background: #e8f5e9; }
+        .status-item.diaktibo { background: #ffebee; }
+        .status-item.uwp { background: #e3f2fd; }
+        .status-item.ms { background: #fff3e0; }
+        .status-item.maysakit { background: #f3e5f5; }
+
+        #dashboardError {
+            display: none;
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        #dashboardError.show {
+            display: block;
+        }
+
+        .recent-members {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .recent-members h2 {
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-badge.aktibo { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.di-aktibo { background: #ffebee; color: #c62828; }
+        .status-badge.uwp { background: #e3f2fd; color: #1565c0; }
+        .status-badge.ms { background: #fff3e0; color: #ef6c00; }
+        .status-badge.may-sakit { background: #f3e5f5; color: #6a1b9a; }
+        .status-badge.n-a { background: #f5f5f5; color: #616161; }
+
+        .text-center {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .counter {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 0.5rem 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .status-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .status-card {
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .status-card.active { background: #e8f5e9; }
+        .status-card.inactive { background: #ffebee; }
+        .status-card.uwp { background: #e3f2fd; }
+        .status-card.ms { background: #fff3e0; }
+        .status-card.sick { background: #f3e5f5; }
+
+        .members-table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        /* Search and Filter */
+        .search-filter-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 10rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            position: sticky;
+            top: 100px; /* Account for navbar height */
+            z-index: 100; /* Lower than navbar but higher than content */
+            transition: box-shadow 0.3s ease;
+        }
+
+        .search-filter-container.sticky {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .search-box input:focus,
+        .filter-group select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select {
+            padding: 0.75rem 2rem 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+            cursor: pointer;
+            min-width: 150px;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+        }
+
+        .filter-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .clear-filters-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .clear-filters-btn:active {
+            transform: translateY(1px);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-results {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .search-results span {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Security and Verification Styles */
+        .sensitive-field {
+            position: relative;
+        }
+
+        .sensitive-field.blurred {
+            filter: blur(4px);
+            user-select: none;
+            cursor: pointer;
+        }
+
+        .sensitive-field.blurred::after {
+            content: "🔒";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            z-index: 2;
+        }
+
+        .sensitive-field.revealed {
+            filter: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 0 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h3 {
+            color: var(--primary-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--accent-color);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .verification-input {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            align-items: center;
+        }
+
+        .verification-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 0.5rem;
+            font-weight: bold;
+        }
+
+        .verification-input input:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .verify-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .verify-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .verify-btn:active {
+            transform: translateY(1px);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .search-filter-container {
+                flex-direction: column;
+                top: 120px; /* Adjust for mobile navbar height */
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .filter-group {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .filter-group select {
+                flex: 1;
+                margin-bottom: 0.5rem;
+            }
+
+            .clear-filters-btn {
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+
+            .verification-input {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Add loading state styles */
+        body.loading::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+        }
+
+        body.loading::before {
+            content: 'Loading...';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* Enhance table styles */
+        .members-table-container {
+            position: relative;
+            min-height: 200px;
+        }
+
+        .members-table-container table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .members-table-container th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 1;
+        }
+
+        .members-table-container tr {
+            transition: background-color 0.2s ease;
+        }
+
+        .members-table-container tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Enhance status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            transition: transform 0.2s ease;
+        }
+
+        .status-badge:hover {
+            transform: scale(1.05);
+        }
+
+        /* Responsive enhancements */
+        @media (max-width: 768px) {
+            .members-table-container {
+                margin: 0 -1rem;
+                width: calc(100% + 2rem);
+            }
+
+            .search-filter-container {
+                position: relative;
+                margin: 0 -1rem;
+                width: calc(100% + 2rem);
+                border-radius: 0;
+            }
+        }
+
+        /* Modern, detailed, and visually appealing design for Bilang ng Kaanib per Purok */
+        .purok-grupo-stats {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .purok-grupo-stats h2 {
+            color: var(--primary-color);
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+        }
+
+        .purok-grupo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .purok-grupo-card {
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: transform 0.2s ease;
+        }
+
+        .purok-grupo-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .purok-grupo-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .purok-grupo-card .counter {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        /* Color variations for different puroks */
+        .purok-grupo-card:nth-child(6n+1) { background: #e8f5e9; }
+        .purok-grupo-card:nth-child(6n+2) { background: #e3f2fd; }
+        .purok-grupo-card:nth-child(6n+3) { background: #fff3e0; }
+        .purok-grupo-card:nth-child(6n+4) { background: #f3e5f5; }
+        .purok-grupo-card:nth-child(6n+5) { background: #e0f2f1; }
+        .purok-grupo-card:nth-child(6n+6) { background: #fce4ec; }
+
+        /* Styling for purok total cards */
+        .purok-grupo-card.purok-total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white;
+            border: 2px solid #4a5568;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .purok-grupo-card.purok-total h3 {
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .purok-grupo-card.purok-total .counter {
+            color: white;
+            font-size: 1.8rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .purok-grupo-card.purok-total:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Make the dashboard main content responsive and well spaced */
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .stats-container,
+        .status-container,
+        .purok-grupo-stats,
+        .recent-members {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                padding: 1rem 0.2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard {
+                padding: 0.5rem 0.1rem;
+                gap: 1rem;
+            }
+        }
+    </style>
+
+    <script>
+        // Sticky search filter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchFilterContainer = document.querySelector('.search-filter-container');
+            const navbar = document.querySelector('.navbar');
+            
+            if (searchFilterContainer && navbar) {
+                const navbarHeight = navbar.offsetHeight;
+                let lastScrollTop = 0;
+                
+                // Update sticky position to account for navbar
+                searchFilterContainer.style.top = navbarHeight + 'px';
+                
+                window.addEventListener('scroll', function() {
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const searchFilterTop = searchFilterContainer.offsetTop;
+                    
+                    // Add sticky class when scrolled past the search filter
+                    if (scrollTop > searchFilterTop - navbarHeight) {
+                        searchFilterContainer.classList.add('sticky');
+                    } else {
+                        searchFilterContainer.classList.remove('sticky');
+                    }
+                    
+                    lastScrollTop = scrollTop;
+                });
+                
+                // Handle window resize to update navbar height
+                window.addEventListener('resize', function() {
+                    const newNavbarHeight = navbar.offsetHeight;
+                    searchFilterContainer.style.top = newNavbarHeight + 'px';
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
